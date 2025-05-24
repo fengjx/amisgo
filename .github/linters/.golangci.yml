@@ -1,0 +1,15 @@
+version: "2"
+
+output:
+  show-stats: true
+  sort-order:
+    - file
+    - linter
+linters:
+  disable:
+    - errcheck
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
