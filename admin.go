@@ -314,6 +314,7 @@ type QueryHandler func(ctx context.Context, param *QueryReq) (*Resp, error)
 
 // CRUDOptions CRUD 页面配置项
 type CRUDOptions struct {
+	menuID             string    // 菜单ID
 	apiPrefix          string    // http 接口前缀
 	apiPath            string    // http 接口路径
 	dbName             string    // 数据库名，使用MySQL时需要指定
@@ -338,6 +339,12 @@ type CRUDOptions struct {
 }
 
 type CRUDOption func(*CRUDOptions)
+
+func WithMenuID(menuID string) CRUDOption {
+	return func(o *CRUDOptions) {
+		o.menuID = menuID
+	}
+}
 
 // WithAPIPrefix 设置 http 接口前缀
 func WithAPIPrefix(apiPrefix string) CRUDOption {
@@ -452,6 +459,9 @@ func NewAdminCRUD(tableName string, apiPath string, opts ...CRUDOption) (*AdminC
 	}
 	for _, opt := range opts {
 		opt(options)
+	}
+	if options.menuID == "" {
+		options.menuID = options.tableName
 	}
 	options.createPath = joinPath(options.apiPath, "add")
 	options.updatePath = joinPath(options.apiPath, "update")

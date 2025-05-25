@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"path"
 	"strings"
 
 	"github.com/fengjx/amisgo/internal/dbutil"
@@ -63,26 +62,14 @@ type Resp struct {
 // AdminRouter admin 路由
 type AdminRouter struct {
 	mux      *http.ServeMux
-	root     *Menu
+	menus    []*Menu
 	menusMap map[string]*Menu
 }
 
 // NewAdminRouter 创建 AdminRouter
 func NewAdminRouter() *AdminRouter {
-	root := &Menu{
-		Label: "root",
-		Children: []*Menu{
-			{
-				Label:    "Home",
-				URL:      "/",
-				Redirect: "/sys",
-				Visible:  true,
-			},
-		},
-	}
 	r := &AdminRouter{
 		mux:      http.NewServeMux(),
-		root:     root,
 		menusMap: make(map[string]*Menu),
 	}
 	r.init()
@@ -98,37 +85,34 @@ func (r *AdminRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 // AddMenu 添加菜单
-func (r *AdminRouter) AddMenu(menus ...*Menu) error {
-	for _, menu := range menus {
-		if err := r.addMenu(menu); err != nil {
-			return err
-		}
+func (r *AdminRouter) SetMenu(menus []*Menu) error {
+	r.menus = menus
+	for _, v := range menus {
+		r.setMenuMap(v)
 	}
 	return nil
 }
 
-// AddMenu 添加菜单
-func (r *AdminRouter) addMenu(menu *Menu) error {
-	parent := r.getMenu(menu.ParentLabel)
-	if parent == nil {
-		return ErrMenuParentNotFound
-	}
-	parent.Children = append(parent.Children, menu)
-	r.menusMap[menu.Label] = menu
+func (r *AdminRouter) setMenuMap(menu *Menu) {
+	r.menusMap[menu.MenuID] = menu
 	for _, v := range menu.Children {
-		if err := r.addMenu(v); err != nil {
-			return err
-		}
+		r.setMenuMap(v)
 	}
-	return nil
 }
 
 // RegisterAdminCRUD 注册 admin crud
-func (r *AdminRouter) RegAdminCRUD(menu *Menu, admin *AdminCRUD) error {
-	schemaPath := path.Join(admin.opt.apiPrefix, admin.opt.apiPath, "page.json")
-	menu.SchemaAPI = schemaPath
-	if err := r.AddMenu(menu); err != nil {
-		return err
+func (r *AdminRouter) RegAdminCRUD(admins ...*AdminCRUD) error {
+	for _, admin := range admins {
+		if err := r.regAdminCRUD(admin); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *AdminRouter) regAdminCRUD(admin *AdminCRUD) error {
+	if m, ok := r.menusMap[admin.opt.menuID]; ok {
+		m.SchemaAPI = admin.opt.pagePath
 	}
 	r.handle(http.MethodGet, admin.opt.pagePath, schemaHandler(admin))
 	r.handle(http.MethodPost, admin.opt.createPath, createHandler(admin))
@@ -146,20 +130,9 @@ func (r *AdminRouter) handle(method, path string, handler http.HandlerFunc) {
 	r.mux.HandleFunc(pattern, handler)
 }
 
-// getMenu 获取菜单
-func (r *AdminRouter) getMenu(label string) *Menu {
-	if label == "" {
-		return r.root
-	}
-	if p, ok := r.menusMap[label]; ok {
-		return p
-	}
-	return nil
-}
-
 func (r *AdminRouter) handleMenu(w http.ResponseWriter, req *http.Request) {
 	_ = kit.WriteJSON(w, http.StatusOK, map[string]any{
-		"pages": r.root.Children,
+		"pages": r.menus,
 	})
 }
 

@@ -51,6 +51,47 @@ func main() {
 	amisgo.UseDefaultExecutor(db)
 	amisgo.UseSaveOmits("ctime", "utime")
 
+	router := amisgo.NewAdminRouter()
+	err := router.SetMenu([]*amisgo.Menu{
+		{
+			Label:    "Home",
+			URL:      "/",
+			Redirect: "/sys",
+			Visible:  true,
+		},
+		{
+			Label:   "系统",
+			Visible: true,
+			Children: []*amisgo.Menu{
+				{
+					Label:   "系统管理",
+					Icon:    "fa fa-wrench",
+					URL:     "/sys",
+					Visible: true,
+					Children: []*amisgo.Menu{
+						{
+							MenuID:  "sys_user",
+							Label:   "用户管理",
+							Icon:    "fa fa-wrench",
+							URL:     "/sys/user",
+							Visible: true,
+						},
+						{
+							MenuID:  "cms_news",
+							Label:   "新闻管理",
+							Icon:    "fa fa-newspaper-o",
+							URL:     "/cms/news",
+							Visible: true,
+						},
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	pwdInput := amisgo.NewInputText()
 	pwdInput.Name = "new_pwd"
 	pwdInput.Label = "密码"
@@ -132,16 +173,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	router := amisgo.NewAdminRouter()
-	err = router.AddMenu(&amisgo.Menu{
-		Label:    "系统管理",
-		URL:      "/sys",
-		Redirect: "/sys/user",
-		Visible:  true,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	news, err := amisgo.NewAdminCRUD(
 		"cms_news",
@@ -192,33 +223,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = router.RegAdminCRUD(
-		&amisgo.Menu{
-			ParentLabel: "系统管理",
-			Label:       "用户管理",
-			Icon:        "fa fa-cog",
-			URL:         "user",
-			Visible:     true,
-		},
-		ac,
-	)
+	err = router.RegAdminCRUD(ac, news)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = router.RegAdminCRUD(
-		&amisgo.Menu{
-			ParentLabel: "系统管理",
-			Label:       "新闻管理",
-			Icon:        "fa fa-cog",
-			URL:         "news",
-			Visible:     true,
-		},
-		news,
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
 	mux := http.NewServeMux()
 	mux.Handle("/admin/", http.StripPrefix("/admin", router))
 	mux.HandleFunc("/api/open/login", login)
