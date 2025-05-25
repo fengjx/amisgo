@@ -49,7 +49,7 @@ func main() {
 	defer kit.QuicklyClose(db)
 
 	amisgo.UseDefaultExecutor(db)
-	amisgo.UseSaveOmits("ctime", "utime")
+	amisgo.UseOmitsEditColumns("ctime", "utime")
 
 	router := amisgo.NewAdminRouter()
 	err := router.SetMenu([]*amisgo.Menu{

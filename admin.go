@@ -439,9 +439,10 @@ func WithOperations(ops []*Action) CRUDOption {
 
 // AdminCRUD CRUD 管理配置
 type AdminCRUD struct {
-	component    Component // 渲染 amis 组件
-	opt          *CRUDOptions
-	table        *dbutil.DBTable
+	init         bool              // 是否初始化
+	component    Component         // 渲染 amis 组件
+	opt          *CRUDOptions      // 配置选项
+	table        *dbutil.DBTable   // 表元信息
 	fieldMap     map[string]*Field // 字段映射: 数据库字段名和外显名称映射
 	fields       []*Field          // 字段定义
 	tableColumns []*Column         // 表格显示字段
@@ -480,9 +481,22 @@ func NewAdminCRUD(tableName string, apiPath string, opts ...CRUDOption) (*AdminC
 	return a, nil
 }
 
+func (a *AdminCRUD) Init() error {
+	if a.init {
+		return nil
+	}
+	if err := a.initTable(); err != nil {
+		return err
+	}
+	a.initFields()
+	a.initComponent()
+	return nil
+}
+
 // initTable 初始化表
 func (a *AdminCRUD) initTable() error {
 	if a.opt.executor == nil {
+		a.fields = a.opt.fields
 		return nil
 	}
 	table, err := dbutil.GetTableMeta(context.Background(), a.opt.executor, a.opt.dbName, a.opt.tableName)
