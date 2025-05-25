@@ -473,11 +473,9 @@ func NewAdminCRUD(tableName string, apiPath string, opts ...CRUDOption) (*AdminC
 	a := &AdminCRUD{
 		opt: options,
 	}
-	if err := a.initTable(); err != nil {
+	if err := a.Init(); err != nil {
 		return nil, err
 	}
-	a.initFields()
-	a.initComponent()
 	return a, nil
 }
 
