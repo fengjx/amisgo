@@ -1,7 +1,6 @@
 package amisgo
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -13,8 +12,6 @@ import (
 )
 
 var (
-	ErrMenuParentNotFound = errors.New("[amisgo] parent menu not found")
-
 	StatusOK   int32 = 0 // 成功
 	StatusFail int32 = 1 // 失败
 )
@@ -101,16 +98,13 @@ func (r *AdminRouter) setMenuMap(menu *Menu) {
 }
 
 // RegisterAdminCRUD 注册 admin crud
-func (r *AdminRouter) RegAdminCRUD(admins ...*AdminCRUD) error {
+func (r *AdminRouter) RegAdminCRUD(admins ...*AdminCRUD) {
 	for _, admin := range admins {
-		if err := r.regAdminCRUD(admin); err != nil {
-			return err
-		}
+		r.regAdminCRUD(admin)
 	}
-	return nil
 }
 
-func (r *AdminRouter) regAdminCRUD(admin *AdminCRUD) error {
+func (r *AdminRouter) regAdminCRUD(admin *AdminCRUD) {
 	if m, ok := r.menusMap[admin.opt.menuID]; ok {
 		m.SchemaAPI = admin.opt.pagePath
 	}
@@ -122,7 +116,6 @@ func (r *AdminRouter) regAdminCRUD(admin *AdminCRUD) error {
 	r.handle(http.MethodPatch, admin.opt.batchUpdatePath, batchUpdateHandler(admin))
 	r.handle(http.MethodDelete, admin.opt.deletePath, deleteHandler(admin))
 	r.handle(http.MethodPost, admin.opt.queryPath, queryHandler(admin))
-	return nil
 }
 
 func (r *AdminRouter) handle(method, path string, handler http.HandlerFunc) {
