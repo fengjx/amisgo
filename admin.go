@@ -190,8 +190,8 @@ func (g *globalConfig) registerMeta(meta *dbutil.DBTable) {
 	g.metaMap[meta.Name] = meta
 }
 
-// UseSaveOmits 设置保存时全局默认忽略的字段
-func UseSaveOmits(omits ...string) {
+// UseOmitsEditColumns 设置保存时全局默认忽略的字段
+func UseOmitsEditColumns(omits ...string) {
 	for _, omit := range omits {
 		global.omitEditColumns[omit] = struct{}{}
 	}
