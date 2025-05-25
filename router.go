@@ -106,7 +106,7 @@ func (r *AdminRouter) RegAdminCRUD(admins ...*AdminCRUD) {
 
 func (r *AdminRouter) regAdminCRUD(admin *AdminCRUD) {
 	if m, ok := r.menusMap[admin.opt.menuID]; ok {
-		m.SchemaAPI = admin.opt.pagePath
+		m.SchemaAPI = joinPath(admin.opt.apiPrefix, admin.opt.pagePath)
 	}
 	r.handle(http.MethodGet, admin.opt.pagePath, schemaHandler(admin))
 	r.handle(http.MethodPost, admin.opt.createPath, createHandler(admin))
