@@ -464,6 +464,9 @@ func NewAdminCRUD(tableName string, apiPath string, opts ...CRUDOption) (*AdminC
 	if options.menuID == "" {
 		options.menuID = options.tableName
 	}
+	if options.executor == nil {
+		options.executor = global.defaultExecutor
+	}
 	options.createPath = joinPath(options.apiPath, "add")
 	options.updatePath = joinPath(options.apiPath, "update")
 	options.batchUpdatePath = joinPath(options.apiPath, "batch-update")
