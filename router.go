@@ -115,6 +115,11 @@ func (r *AdminRouter) addMenu(menu *Menu) error {
 	}
 	parent.Children = append(parent.Children, menu)
 	r.menusMap[menu.Label] = menu
+	for _, v := range menu.Children {
+		if err := r.addMenu(v); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
