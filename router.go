@@ -245,6 +245,7 @@ func queryHandler(admin *AdminCRUD) http.HandlerFunc {
 				},
 			}
 		}
+		query.OrderFields = ofs
 
 		resp, err := admin.query(req.Context(), query)
 		if err != nil {
