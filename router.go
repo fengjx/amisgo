@@ -230,15 +230,22 @@ func queryHandler(admin *AdminCRUD) http.HandlerFunc {
 			return
 		}
 		query.TableName = admin.opt.tableName
-		if len(query.OrderFields) == 0 {
+		var ofs []OrderField
+		for _, f := range ofs {
+			if f.Field != "" && f.OrderType != "" {
+				ofs = append(ofs, f)
+			}
+		}
+		if len(ofs) == 0 {
 			// 默认按主键排序
-			query.OrderFields = []OrderField{
+			ofs = []OrderField{
 				{
 					Field:     admin.primaryKeyField.Name,
 					OrderType: OrderTypeDesc,
 				},
 			}
 		}
+
 		resp, err := admin.query(req.Context(), query)
 		if err != nil {
 			_ = kit.WriteJSON(w, http.StatusInternalServerError, &Resp{
