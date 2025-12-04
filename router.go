@@ -223,16 +223,25 @@ func queryHandler(admin *AdminCRUD) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		query := &QueryReq{}
 		if err := kit.ShouldBindJSON(req, query); err != nil {
-			kit.WriteJSON(w, http.StatusBadRequest, &Resp{
+			_ = kit.WriteJSON(w, http.StatusBadRequest, &Resp{
 				Status: 0,
 				Msg:    "参数解析错误",
 			})
 			return
 		}
 		query.TableName = admin.opt.tableName
+		if len(query.OrderFields) == 0 {
+			// 默认按主键排序
+			query.OrderFields = []OrderField{
+				{
+					Field:     admin.primaryKeyField.Name,
+					OrderType: OrderTypeDesc,
+				},
+			}
+		}
 		resp, err := admin.query(req.Context(), query)
 		if err != nil {
-			kit.WriteJSON(w, http.StatusInternalServerError, &Resp{
+			_ = kit.WriteJSON(w, http.StatusInternalServerError, &Resp{
 				Status: StatusFail,
 				Msg:    "系统错误",
 			})

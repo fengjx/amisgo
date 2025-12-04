@@ -37,7 +37,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 }
 
 func getExampleDB() *sql.DB {
-	db, err := sql.Open("mysql", "root:123456@tcp(192.168.6.121:3306)/lucky?charset=utf8mb4&parseTime=True&loc=Asia%2FShanghai")
+	db, err := sql.Open("mysql", "root:123456@tcp(192.168.1.121:3306)/lucky?charset=utf8mb4&parseTime=True&loc=Asia%2FShanghai")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -223,10 +223,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = router.RegAdminCRUD(ac, news)
-	if err != nil {
-		log.Fatal(err)
-	}
+	router.RegAdminCRUD(ac, news)
 
 	mux := http.NewServeMux()
 	mux.Handle("/admin/", http.StripPrefix("/admin", router))
@@ -236,7 +233,7 @@ func main() {
 	handler := corsMiddleware(mux)
 
 	fmt.Println("Starting server at port 8080")
-	if err = http.ListenAndServe(":8080", handler); err != nil {
+	if err = http.ListenAndServe(":8081", handler); err != nil {
 		fmt.Println(err)
 	}
 }

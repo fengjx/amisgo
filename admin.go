@@ -215,6 +215,7 @@ type Field struct {
 	UpdateAble          bool          // 修改记录是否显示字段
 	SearchAble          bool          // 是否搜索字段
 	SearchConditionType ConditionType // 搜索字段匹配类型 ConditionType
+	Sortable            bool          // 是否可排序
 	QuickEdit           bool          // 是否快速编辑
 	Options             *Options      // 动态加载选项, select tree-select 类型才有意义
 	Tpl                 string        // 显示模板字符串
@@ -439,17 +440,18 @@ func WithOperations(ops []*Action) CRUDOption {
 
 // AdminCRUD CRUD 管理配置
 type AdminCRUD struct {
-	init         bool              // 是否初始化
-	component    Component         // 渲染 amis 组件
-	opt          *CRUDOptions      // 配置选项
-	table        *dbutil.DBTable   // 表元信息
-	fieldMap     map[string]*Field // 字段映射: 数据库字段名和外显名称映射
-	fields       []*Field          // 字段定义
-	tableColumns []*Column         // 表格显示字段
-	viewColumns  []*Field          // 详情显示字段
-	createFields []*Field          // 新增表单字段
-	updateFields []*Field          // 修改表单字段
-	searchFields []*Field          // 搜索字段
+	init            bool              // 是否初始化
+	component       Component         // 渲染 amis 组件
+	opt             *CRUDOptions      // 配置选项
+	table           *dbutil.DBTable   // 表元信息
+	primaryKeyField *Field            // 主键
+	fieldMap        map[string]*Field // 字段映射: 数据库字段名和外显名称映射
+	fields          []*Field          // 字段定义
+	tableColumns    []*Column         // 表格显示字段
+	viewColumns     []*Field          // 详情显示字段
+	createFields    []*Field          // 新增表单字段
+	updateFields    []*Field          // 修改表单字段
+	searchFields    []*Field          // 搜索字段
 }
 
 // NewAdminCRUD 创建一个新的 CrudAdmin 实例
@@ -545,6 +547,9 @@ func (a *AdminCRUD) initTable() error {
 		if f.SearchConditionType == "" {
 			f.SearchConditionType = ConditionTypeEq
 		}
+		if f.IsPrimaryKey {
+			a.primaryKeyField = f
+		}
 		fieldMap[col.Name] = f
 		fields = append(fields, f)
 	}
@@ -577,8 +582,9 @@ func (a *AdminCRUD) initFields() {
 	for _, f := range a.fields {
 		if f.ShowTable {
 			c := &Column{
-				Name:  f.Name,
-				Label: f.Label,
+				Name:     f.Name,
+				Label:    f.Label,
+				Sortable: f.Sortable,
 			}
 			if f.QuickEdit {
 				c.QuickEdit = f.toQuickEditInput()
@@ -611,7 +617,7 @@ func (a *AdminCRUD) initComponent() {
 	quickSaveApi.Data = map[string]any{"rows": "${rowsDiff}"}
 
 	// 列定义
-	columns := []*Column{}
+	var columns []*Column
 	columns = append(columns, a.tableColumns...)
 
 	buttons := []*Action{
